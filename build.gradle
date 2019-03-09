@@ -1,0 +1,67 @@
+buildscript {
+	ext {
+		grailsVersion = project.grailsVersion
+	}
+	repositories {
+		mavenLocal()
+		maven { url "https://repo.grails.org/grails/core" }
+	}
+	dependencies {
+		subprojects { project ->
+			classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+			if ( project.name.startsWith('web') ) {
+				classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.11.6"
+				classpath "org.grails.plugins:hibernate5:6.0.4"
+			}
+		}
+	}
+}
+
+ext {
+	grailsVersion = project.grailsVersion
+	gradleWrapperVersion = project.gradleWrapperVersion
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = gradleWrapperVersion
+}
+
+subprojects { project ->
+	apply plugin:"eclipse"
+	apply plugin:"idea"
+	if ( project.name.startsWith('web') ) {
+		apply plugin:"war"
+		apply plugin:"org.grails.grails-web"
+		apply plugin:"org.grails.grails-gsp"
+		apply plugin:"asset-pipeline"
+ 
+	} else if ( project.name.startsWith('plugin') ) {
+		apply plugin:"org.grails.grails-plugin"
+		apply plugin:"org.grails.grails-plugin-publish"
+	}
+ 
+	repositories {
+		mavenLocal()
+		maven { url "https://repo.grails.org/grails/core" }
+	}
+ 
+	dependencyManagement {
+		imports {
+			mavenBom "org.grails:grails-bom:$grailsVersion"
+		}
+		applyMavenExclusions false
+	}
+ 
+	dependencies {
+		compile "org.springframework.boot:spring-boot-starter-logging"
+		compile "org.springframework.boot:spring-boot-autoconfigure"
+		compile "org.grails:grails-core"
+		console "org.grails:grails-console"
+		testCompile "org.grails:grails-plugin-testing"	 
+	}
+
+	bootRun {
+		jvmArgs('-Dspring.output.ansi.enabled=always')
+	}
+}
+
